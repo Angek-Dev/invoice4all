@@ -9,7 +9,7 @@ Font.register({
     ],
 });
 
-type Stop = { type: string; city: string; zip: string; datetime: string, datetime2: string };
+type Stop = { type: string; city: string; state: string; zip: string; datetime: string, datetime2: string };
 type Item = { description: string; notes: string; quantity: number; cost: number; stops: Stop[] };
 
 export type InvoicePayload = {
@@ -158,7 +158,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                                     {"\n"}
                                     {stop.type}
                                     {stop.datetime ? ` - ${new Date(stop.datetime).toLocaleDateString("en-US")}` : ""}{stop.datetime2 ? ` - ${new Date(stop.datetime2).toLocaleDateString("en-US")}` : ""}
-                                    {"\n"}    {stop.city}{stop.zip ? `, ${stop.zip}` : ""}
+                                    {"\n"}    {stop.city}{stop.state ? `, ${stop.state}` : ""}{stop.zip ? `, ${stop.zip}` : ""}
                                 </Text>
                             ))}
                         </Text>
