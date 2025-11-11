@@ -9,7 +9,7 @@ Font.register({
     ],
 });
 
-type Stop = { type: string; city: string; zip: string; datetime: string };
+type Stop = { type: string; city: string; zip: string; datetime: string, datetime2: string };
 type Item = { description: string; notes: string; quantity: number; cost: number; stops: Stop[] };
 
 export type InvoicePayload = {
@@ -99,7 +99,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                     <View style={{ marginTop: 25, width: 200, alignSelf: "flex-end" }}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 }}>
                             <Text style={{ width: 100, textAlign: "right" }}>Invoice Date:</Text>
-                            <Text>{new Date(payload.date).toLocaleDateString()}</Text>
+                            <Text>{new Date(payload.date).toLocaleDateString("en-US")}</Text>
                         </View>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 }}>
                             <Text style={{ width: 100, textAlign: "right" }}>Load:</Text>
@@ -148,7 +148,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                                 >
                                     {"\n"}
                                     {stop.type}
-                                    {stop.datetime ? ` - ${new Date(stop.datetime).toLocaleDateString()}` : ""}
+                                    {stop.datetime ? ` - ${new Date(stop.datetime).toLocaleDateString("en-US")}` : ""}{stop.datetime2 ? ` - ${new Date(stop.datetime2).toLocaleDateString("en-US")}` : ""}
                                     {"\n"}    {stop.city}{stop.zip ? `, ${stop.zip}` : ""}
                                 </Text>
                             ))}
