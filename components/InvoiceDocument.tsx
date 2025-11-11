@@ -16,6 +16,7 @@ export type InvoicePayload = {
     id: string;
     load_number: string;
     date: string;
+    timezone: string;
     carrier: { name: string; address: string; address2: string; phone: string; email: string };
     broker: { name: string; address: string; address2: string; phone: string; email: string };
     items: Item[];
@@ -23,6 +24,14 @@ export type InvoicePayload = {
     secondaryColor?: string;
     adjustments?: { quickpayFeePercent?: number; fixedFee?: number };
 };
+function toLocalDate(isoString: string, tz: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(isoString))
+}
 
 export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
     const primary = `#${payload.color || "134A9E"}`;
@@ -99,7 +108,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                     <View style={{ marginTop: 25, width: 200, alignSelf: "flex-end" }}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 }}>
                             <Text style={{ width: 100, textAlign: "right" }}>Invoice Date:</Text>
-                            <Text>{new Date(payload.date).toLocaleDateString("en-US")}</Text>
+                            <Text>{toLocalDate(payload.date, payload.timezone)}</Text>
                         </View>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 }}>
                             <Text style={{ width: 100, textAlign: "right" }}>Load:</Text>
