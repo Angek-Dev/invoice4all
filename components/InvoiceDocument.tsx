@@ -15,6 +15,7 @@ type Item = { description: string; notes: string; quantity: number; cost: number
 export type InvoicePayload = {
     id: string;
     load_number: string;
+    load_number_label?: string;
     date: string;
     timezone: string;
     carrier: { name: string; address: string; address2: string; phone: string; email: string };
@@ -106,6 +107,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
     
     // Format the phone number cleanly ahead of rendering
     const formattedCarrierPhone = formatPhoneNumber(payload.carrier.phone);
+    const loadNumberLabel = payload.load_number_label?.trim() || "Load";
 
     return (
         <Page size="A4" style={styles.page}>
@@ -142,7 +144,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                             <Text>{toLocalDate(payload.date, payload.timezone)}</Text>
                         </View>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 }}>
-                            <Text style={{ width: 100, textAlign: "right" }}>Load:</Text>
+                            <Text style={{ width: 100, textAlign: "right" }}>{loadNumberLabel}:</Text>
                             <Text>{payload.load_number}</Text>
                         </View>
                     </View>

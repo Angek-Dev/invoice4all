@@ -1,9 +1,8 @@
-// app/api/pdf/fakePayload.ts
-export const fakeInvoice = {
+export const examplePayload = {
   id: "782",
   load_number: "AJK-908121",
   load_number_label: "Shipment",
-  date: new Date().toISOString(),
+  date: "2025-06-06T15:30:00.000Z",
   timezone: "America/Los_Angeles",
   carrier: {
     name: "Three Stars Transport Inc",
@@ -19,28 +18,38 @@ export const fakeInvoice = {
     phone: "(619) 555-1234",
     email: "broker@example.com",
   },
-  adjustments: { quickpayFeePercent: 0, fixedFee: 0 },
+  adjustments: {
+    quickpayFeePercent: 2,
+    fixedFee: 0,
+  },
   items: [
     {
       description: "Line Haul",
+      notes: "",
       quantity: 1,
       cost: 2000,
       stops: [
         {
           type: "Pickup",
           city: "Sohnen Enterprise - 9043 Siempre Viva Rd, San Diego, CA",
+          state: "CA",
           zip: "92154",
-          datetime: new Date().toISOString(),
+          datetime: "2025-06-05T08:00:00.000Z",
+          datetime2: "",
         },
         {
           type: "Delivery",
           city: "Z & S 26 Electronics, Inc. - 967 E. 11th Street, Los Angeles, CA",
+          state: "CA",
           zip: "90021",
-          datetime: new Date().toISOString(),
+          datetime: "2025-06-06T14:00:00.000Z",
+          datetime2: "",
         },
       ],
-    }
+    },
   ],
   color: "134A9E",
   secondaryColor: "134A9E",
 };
+
+export const examplePayloadJson = JSON.stringify(examplePayload, null, 2);
