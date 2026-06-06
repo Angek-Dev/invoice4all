@@ -24,6 +24,34 @@ export type InvoicePayload = {
     secondaryColor?: string;
     adjustments?: { quickpayFeePercent?: number; fixedFee?: number };
 };
+
+// Robust helper to handle and format the target phone number edge cases
+function formatPhoneNumber(phoneStr: string): string {
+    if (!phoneStr) return "";
+    
+    // Strip everything except numbers and '+' sign
+    const cleaned = phoneStr.replace(/[^\d+]/g, "");
+
+    // Case 1: Standard 10 digits "6199396319" -> "(619) 939-6319"
+    if (cleaned.length === 10 && /^\d+$/.test(cleaned)) {
+        return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    }
+
+    // Case 2: Country code prefixed with '+' (e.g., "+16199396319", "+526631015249")
+    if (cleaned.startsWith("+")) {
+        // Extract the main 10-digit phone portion from the back
+        const mainPart = cleaned.slice(-10);
+        const countryCode = cleaned.slice(0, -10);
+
+        if (mainPart.length === 10) {
+            return `${countryCode} (${mainPart.slice(0, 3)}) ${mainPart.slice(3, 6)}-${mainPart.slice(6)}`;
+        }
+    }
+
+    // Fallback if string matches nothing expected
+    return phoneStr;
+}
+
 function toLocalDate(isoString: string, tz: string) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
@@ -75,6 +103,10 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
 
     // Capitalize first letter
     totalInWords = totalInWords.charAt(0).toUpperCase() + totalInWords.slice(1);
+    
+    // Format the phone number cleanly ahead of rendering
+    const formattedCarrierPhone = formatPhoneNumber(payload.carrier.phone);
+
     return (
         <Page size="A4" style={styles.page}>
             {/* Carrier / Broker + Invoice Summary */}
@@ -84,7 +116,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                     <Text style={styles.label}>{payload.carrier.name}</Text>
                     <Text>{payload.carrier.address}</Text>
                     <Text>{payload.carrier.address2}</Text>
-                    <Text>{payload.carrier.phone}</Text>
+                    <Text>{formattedCarrierPhone}</Text>
                     <Text>{payload.carrier.email}</Text>
 
                     <View style={{ marginTop: 55 }}>
@@ -103,7 +135,6 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                     <Text style={{ fontSize: 12, fontWeight: "bold" }}>
                         ${payload.items.reduce((sum, item) => sum + item.cost * item.quantity, 0).toFixed(2)}
                     </Text>
-
 
                     <View style={{ marginTop: 25, width: 200, alignSelf: "flex-end" }}>
                         <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5 }}>
@@ -145,7 +176,6 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                             {item.notes && (
                                 <>
                                     <Text>{item.notes}</Text>
-
                                 </>
                             )}
 
@@ -206,7 +236,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                 <Text style={{ fontSize: 8, color: "#444444" }}>
                     All Check will be made payable to {payload.carrier.name}{"\n"}
                     If you have questions about this bill, please use the following contact information:{"\n"}
-                    {payload.carrier.phone} or {payload.carrier.email} {"\n"}
+                    {formattedCarrierPhone} or {payload.carrier.email} {"\n"}
                     Thank you for your trust.
                 </Text>
             </View>
