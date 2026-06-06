@@ -11,12 +11,12 @@
   "dependencies": {
     "@react-pdf/renderer": "^4.3.0",
     "@sparticuz/chromium": "^138.0.2",
-    "next": "15.5.2",
+    "next": "^16.2.7",
     "pdfkit": "^0.17.1",
     "puppeteer": "^24.17.1",
     "puppeteer-core": "^24.17.1",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
