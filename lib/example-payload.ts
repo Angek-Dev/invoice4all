@@ -18,10 +18,20 @@ export const examplePayload = {
     phone: "(619) 555-1234",
     email: "broker@example.com",
   },
-  adjustments: {
-    quickpayFeePercent: 2,
-    fixedFee: 0,
-  },
+  adjustments: [
+    {
+      id: "mock-adj-1",
+      description: "Detention at pickup location",
+      type: "addition",
+      amountCents: 15000
+    },
+    {
+      id: "mock-adj-2",
+      description: "QuickPay Processing Fee",
+      type: "deduction",
+      amountCents: 4000,
+    }
+  ],
   items: [
     {
       description: "Line Haul",
