@@ -12,6 +12,14 @@ Font.register({
 type Stop = { type: string; city: string; state: string; zip: string; datetime: string, datetime2: string };
 type Item = { description: string; notes: string; quantity: number; cost: number; stops: Stop[] };
 
+// Dynamic Adjustment type matching your React frontend component state
+export type DynamicAdjustment = {
+    id: string;
+    description: string;
+    type: "addition" | "deduction";
+    amountCents: number;
+};
+
 export type InvoicePayload = {
     id: string;
     load_number: string;
@@ -23,7 +31,7 @@ export type InvoicePayload = {
     items: Item[];
     color?: string;
     secondaryColor?: string;
-    adjustments?: { quickpayFeePercent?: number; fixedFee?: number };
+    adjustments?: DynamicAdjustment[]; // Updated to accept your dynamic array
 };
 
 // Robust helper to handle and format the target phone number edge cases
@@ -89,11 +97,18 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
         stop: { marginLeft: 10 },
     });
 
-    // calculate totals
+    // Calculate baseline subtotal from load items
     const itemsTotal = payload.items.reduce((sum, item) => sum + item.cost * item.quantity, 0);
-    const quickpayFee = (payload.adjustments?.quickpayFeePercent || 0) * itemsTotal / 100;
-    const fixedFee = payload.adjustments?.fixedFee || 0;
-    const total = itemsTotal - quickpayFee + fixedFee;
+    
+    // Dynamically calculate additions and deductions from the dynamic state adjustments
+    const dynamicAdjustmentsTotal = (payload.adjustments || []).reduce((sum, adj) => {
+        const amountDollars = adj.amountCents / 100;
+        return adj.type === "addition" ? sum + amountDollars : sum - amountDollars;
+    }, 0);
+
+    const total = itemsTotal + dynamicAdjustmentsTotal;
+    
+    // Split into words cleanly
     const dollars = Math.floor(total);
     const cents = Math.round((total - dollars) * 100);
 
@@ -135,7 +150,7 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                     <Text style={{ fontSize: 12, marginTop: 25, fontWeight: "bold" }}># {payload.id}</Text>
                     <Text style={{ marginTop: 25, fontWeight: "bold" }}>Rate</Text>
                     <Text style={{ fontSize: 12, fontWeight: "bold" }}>
-                        ${payload.items.reduce((sum, item) => sum + item.cost * item.quantity, 0).toFixed(2)}
+                        ${itemsTotal.toFixed(2)}
                     </Text>
 
                     <View style={{ marginTop: 25, width: 200, alignSelf: "flex-end" }}>
@@ -164,24 +179,19 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                 {payload.items.map((item, idx) => (
                     <View key={idx} style={styles.tableRow}>
                         <Text style={{ flex: 2 }}>{idx + 1}</Text>
-                        {/* Description + stops inside the same cell */}
                         <Text style={[styles.cell, { flex: 30 }]}>
-                            {/* Description always on its own line */}
                             <Text style={{ fontSize: 10 }}>
                                 {item.description}
                             </Text>
 
-                            {/* Force line break */}
                             {"\n"}
 
-                            {/* Notes, if any */}
                             {item.notes && (
                                 <>
                                     <Text>{item.notes}</Text>
                                 </>
                             )}
 
-                            {/* Stops */}
                             {item.stops.map((stop) => (
                                 <Text
                                     key={stop.city + stop.datetime}
@@ -202,27 +212,28 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                 ))}
             </View>
 
-            {/* Totals */}
+            {/* Totals Section */}
             <View style={{ marginTop: 10, width: 225, alignSelf: "flex-end" }}>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, paddingRight: 5 }}>
                     <Text style={{ width: 120, textAlign: "right" }}>Sub Total</Text>
                     <Text>${itemsTotal.toFixed(2)}</Text>
                 </View>
 
-                {quickpayFee > 0 && (
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, paddingRight: 5 }}>
-                        <Text style={{ width: 120, textAlign: "right" }}>Quickpay {payload.adjustments?.quickpayFeePercent}%</Text>
-                        <Text>-${quickpayFee.toFixed(2)}</Text>
-                    </View>
-                )}
-
-                {/* Fixed Fee */}
-                {fixedFee > 0 && (
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, paddingRight: 5 }}>
-                        <Text style={{ width: 120, textAlign: "right" }}>Fixed Fee</Text>
-                        <Text>+${fixedFee.toFixed(2)}</Text>
-                    </View>
-                )}
+                {/* Dynamically render front-end additions and deductions */}
+                {payload.adjustments && payload.adjustments.map((adj) => {
+                    const displayAmount = adj.amountCents / 100;
+                    const isAddition = adj.type === "addition";
+                    return (
+                        <View key={adj.id} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 5, paddingRight: 5 }}>
+                            <Text style={{ width: 120, textAlign: "right" }}>
+                                {adj.description}
+                            </Text>
+                            <Text>
+                                {isAddition ? "+ " : "- "}${displayAmount.toFixed(2)}
+                            </Text>
+                        </View>
+                    );
+                })}
 
                 <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 3, backgroundColor: "#f0f0f0", paddingVertical: 10, paddingRight: 5 }}>
                     <Text style={{ width: 120, textAlign: "right", fontWeight: "bold", fontSize: 10 }}>Total</Text>
@@ -230,9 +241,10 @@ export const InvoiceDocument = ({ payload }: { payload: InvoicePayload }) => {
                 </View>
 
                 <Text style={{ marginTop: 5, paddingHorizontal: 20, fontWeight: "bold", fontStyle: "italic", color: "#444444", textAlign: "right" }}>
-                    (USD) {totalInWords.charAt(0).toUpperCase() + totalInWords.slice(1)}
+                    (USD) {totalInWords}
                 </Text>
             </View>
+
             <View style={{ marginTop: 25 }}>
                 <Text style={{ fontSize: 10, color: "#444444" }}>Notes</Text>
                 <Text style={{ fontSize: 8, color: "#444444" }}>

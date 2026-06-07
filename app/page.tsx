@@ -26,7 +26,7 @@ const rootFields = [
   { field: "items", type: "array", required: true, description: "Line items (see below)" },
   { field: "color", type: "string", required: false, description: "Primary accent color, hex without #", default: "134A9E" },
   { field: "secondaryColor", type: "string", required: false, description: "Table header color, hex without #" },
-  { field: "adjustments", type: "object", required: false, description: "Fee adjustments (see below)" },
+  { field: "adjustments", type: "array", required: false, description: "Dynamic line-item fee adjustments array (see below)" },
 ];
 
 const partyFields = [
@@ -55,8 +55,10 @@ const stopFields = [
 ];
 
 const adjustmentFields = [
-  { field: "quickpayFeePercent", type: "number", required: false, description: "Percentage deducted from subtotal", default: "0" },
-  { field: "fixedFee", type: "number", required: false, description: "Flat fee added to the total", default: "0" },
+  { field: "id", type: "string", required: true, description: "Unique identifier for structural mutations (e.g. UUID)" },
+  { field: "description", type: "string", required: true, description: "Line-item descriptor title displayed inside the totals block" },
+  { field: "type", type: '"addition" | "deduction"', required: true, description: "Determines mathematical modification polarity behavior" },
+  { field: "amountCents", type: "number", required: true, description: "Absolute dollar value calculated strictly in integer cents (e.g., 15000 for $150.00)" },
 ];
 
 export default function DocsPage() {
@@ -142,7 +144,7 @@ export default function DocsPage() {
               {[
                 "REST API with GET and POST endpoints",
                 "Logistics layout with pickup/delivery stops",
-                "Quick-pay and fixed fee adjustments",
+                "Dynamic custom additions and deductions array",
                 "Custom brand colors per invoice",
                 "CORS enabled for browser clients",
                 "Total amount written in words",
@@ -325,9 +327,9 @@ export default function DocsPage() {
             <p className="mt-2 text-sm text-slate-600">
               Total:{" "}
               <code className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-xs">
-                subtotal - quickpayFee + fixedFee
+                subtotal +/- adjustmentsTotal
               </code>
-              , where subtotal = Σ(quantity × cost).
+              , where subtotal = Σ(quantity × cost) and adjustmentsTotal handles polarity based on item type.
             </p>
 
             <div className="mt-8 space-y-6">
@@ -335,7 +337,7 @@ export default function DocsPage() {
               <SchemaTable rows={partyFields} title="carrier / broker" />
               <SchemaTable rows={itemFields} title="items[]" />
               <SchemaTable rows={stopFields} title="items[].stops[]" />
-              <SchemaTable rows={adjustmentFields} title="adjustments" />
+              <SchemaTable rows={adjustmentFields} title="adjustments[]" />
             </div>
           </section>
 

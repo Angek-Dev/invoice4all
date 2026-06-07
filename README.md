@@ -8,7 +8,7 @@ Built with [@react-pdf/renderer](https://react-pdf.org/) for server-side PDF gen
 
 - **REST API** — `GET` for a sample invoice, `POST` with your own payload
 - **Logistics-focused layout** — carrier/broker details, load numbers, line items with pickup/delivery stops
-- **Fee adjustments** — optional quick-pay percentage and fixed fees
+- **Dynamic adjustments** — unlimited additions and deductions in the totals section
 - **Branding** — customizable primary and secondary colors (hex, without `#`)
 - **Custom reference label** — rename "Load:" to "Shipment:" (or any label) per invoice
 - **API key auth** — optional key protection via `INVOICE_API_KEYS`
@@ -138,7 +138,7 @@ The `InvoicePayload` type is defined in `components/InvoiceDocument.tsx`.
 | `items`           | array    | Yes      | Line items (see below)                           |
 | `color`           | string   | No       | Primary accent color, hex without `#` (default: `134A9E`) |
 | `secondaryColor`  | string   | No       | Table header color, hex without `#`              |
-| `adjustments`     | object   | No       | Fee adjustments (see below)                      |
+| `adjustments`     | array    | No       | Dynamic additions and deductions (see below)     |
 
 ### `carrier` / `broker`
 
@@ -171,14 +171,26 @@ The `InvoicePayload` type is defined in `components/InvoiceDocument.tsx`.
 | `datetime`  | string | No       | ISO date for first date column |
 | `datetime2` | string | No       | Optional second date           |
 
-### `adjustments`
+### `adjustments[]`
 
-| Field                 | Type   | Default | Description                          |
-| --------------------- | ------ | ------- | ------------------------------------ |
-| `quickpayFeePercent`  | number | `0`     | Percentage deducted from subtotal    |
-| `fixedFee`            | number | `0`     | Flat fee added to the total          |
+| Field | Type | Required | Description |
+|--------|--------|----------|-------------|
+| `id` | string | Yes | Unique identifier for the adjustment |
+| `description` | string | Yes | Label displayed in the totals section |
+| `type` | `"addition"` \| `"deduction"` | Yes | Determines whether the amount increases or decreases the total |
+| `amountCents` | number | Yes | Amount in integer cents (e.g. `15000` = `$150.00`) |
 
-**Total calculation:** `subtotal - quickpayFee + fixedFee`, where `subtotal = Σ(quantity × cost)`.
+**Total calculation:**
+
+```text
+total = subtotal + additions - deductions
+```
+
+Where:
+
+```text
+subtotal = Σ(quantity × cost)
+```
 
 ### Example payload
 
@@ -203,10 +215,20 @@ The `InvoicePayload` type is defined in `components/InvoiceDocument.tsx`.
     "phone": "(619) 555-1234",
     "email": "broker@example.com"
   },
-  "adjustments": {
-    "quickpayFeePercent": 2,
-    "fixedFee": 0
-  },
+  "adjustments": [
+    {
+      "id": "mock-adj-1",
+      "description": "Detention at pickup location",
+      "type": "addition",
+      "amountCents": 15000
+    },
+    {
+      "id": "mock-adj-2",
+      "description": "QuickPay Processing Fee",
+      "type": "deduction",
+      "amountCents": 4000,
+    }
+  ],
   "items": [
     {
       "description": "Line Haul",
